@@ -1,3 +1,5 @@
+// Updated CORS for production
+
 import express from 'express' 
 import dotenv from'dotenv'
 import authRoutes from'./routes/authRoutes.js'
