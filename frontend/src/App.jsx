@@ -23,6 +23,12 @@ const isAuthenticated=Boolean(authUser)
 const isOnboarded=authUser?.isOnboarded
 const {theme}=useThemeStore()
 
+  console.log("=== APP.JSX DEBUG ===");
+  console.log("isAuthenticated:", isAuthenticated);
+  console.log("isOnboarded:", isOnboarded);
+  console.log("authUser:", authUser);
+  console.log("Current path:", window.location.pathname);
+
 if (isLoading) return <PageLoader />
   return (
     <div className='h-screen' data-theme={theme   }>
