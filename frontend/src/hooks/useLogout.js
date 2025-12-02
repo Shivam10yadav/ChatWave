@@ -9,15 +9,17 @@ const useLogout = () => {
 
   const { mutate: logoutMutation } = useMutation({
     mutationFn: logout,
-    onSuccess: () => {
-      // Clear all queries
-      queryClient.clear();
-      
-      // Show success message
+    onSuccess: async () => {
+      // Show success message first
       toast.success("Logged out successfully");
       
-      // Redirect to login
-      navigate('/login');
+      // Clear all queries and wait for it
+      await queryClient.clear();
+      
+      // Small delay to ensure state updates
+      setTimeout(() => {
+        navigate('/login', { replace: true });
+      }, 100);
     },
     onError: (error) => {
       console.error("Logout error:", error);
