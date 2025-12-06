@@ -20,6 +20,11 @@ app.use(cors({
     ],
     credentials: true
 }))
+
+// server.js or app.js
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date() });
+}); 
 app.use(express.json())
 app.use(cookieParser());
 
