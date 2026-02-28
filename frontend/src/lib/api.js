@@ -6,12 +6,8 @@ export const signUp = async (signupData) => {
 };
 
 export const getAuthUser = async () => {
-  try {
-    const res = await axiosInstance.get("/auth/me");
-    return res.data;
-  } catch (error) {
-    return null;
-  }
+  const res = await axiosInstance.get("/auth/me");
+  return res.data;
 };
 
 export const completeOnboarding = async (userData) => {
@@ -48,12 +44,14 @@ export async function sendFriendRequest(userId) {
   const response = await axiosInstance.post(`/users/friend-request/${userId}`);
   return response.data;
 }
+
 export async function acceptFriendRequest(requestId) {
   const response = await axiosInstance.put(
     `/users/friend-request/${requestId}/accept`
   );
   return response.data;
 }
+
 export async function getFriendRequests() {
   const response = await axiosInstance.get("/users/friend-requests");
   return response.data;

@@ -1,29 +1,28 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
 import { logout } from '../lib/api';
 import toast from 'react-hot-toast';
 
 const useLogout = () => {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
 
   const { mutate: logoutMutation } = useMutation({
     mutationFn: logout,
-    onSuccess: async () => {
-      // Show success message first
+    onSuccess: () => {
       toast.success("Logged out successfully");
       
-      // Clear all queries and wait for it
-      await queryClient.clear();
+      // Remove all queries
+      queryClient.removeQueries();
       
-      // Small delay to ensure state updates
-      setTimeout(() => {
-        navigate('/login', { replace: true });
-      }, 100);
+      // Force hard reload to /login (this clears everything)
+      window.location.href = '/login';
     },
     onError: (error) => {
       console.error("Logout error:", error);
       toast.error("Failed to logout");
+      
+      // Even on error, force logout
+      queryClient.removeQueries();
+      window.location.href = '/login';
     }
   });
 

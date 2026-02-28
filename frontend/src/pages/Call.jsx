@@ -1,12 +1,122 @@
-const Call = () => {
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router";
+import useAuthUser from "../hooks/useAuthUser";
+import { useQuery } from "@tanstack/react-query";
+import { getStreamToken } from "../lib/api";
+
+import {
+  StreamVideo,
+  StreamVideoClient,
+  StreamCall,
+  CallControls,
+  SpeakerLayout,
+  StreamTheme,
+  CallingState,
+  useCallStateHooks,
+} from "@stream-io/video-react-sdk";
+
+import "@stream-io/video-react-sdk/dist/css/styles.css";
+import toast from "react-hot-toast";
+import PageLoader from "../components/PageLoader";
+
+const STREAM_API_KEY = import.meta.env.VITE_STREAM_API_KEY;
+
+const CallPage = () => {
+  const { id: callId } = useParams();
+  const [client, setClient] = useState(null);
+  const [call, setCall] = useState(null);
+  const [isConnecting, setIsConnecting] = useState(true);
+
+  const { authUser, isLoading } = useAuthUser();
+
+  const { data: tokenData } = useQuery({
+    queryKey: ["streamToken"],
+    queryFn: getStreamToken,
+    enabled: !!authUser,
+  });
+
+  useEffect(() => {
+    let videoClient;
+
+    const initCall = async () => {
+      // ✅ Fix 1: optional chaining to avoid crash if tokenData is undefined
+      if (!tokenData?.token || !authUser || !callId) return;
+
+      try {
+        console.log("Initializing Stream video client...");
+
+        const user = {
+          id: authUser._id,
+          name: authUser.fullName,
+          image: authUser.profilePic,
+        };
+
+        // ✅ Fix 2: track client in local variable for cleanup
+        videoClient = new StreamVideoClient({
+          apiKey: STREAM_API_KEY,
+          user,
+          token: tokenData.token,
+        });
+
+        const callInstance = videoClient.call("default", callId);
+        await callInstance.join({ create: true });
+
+        console.log("Joined call successfully");
+
+        setClient(videoClient);
+        setCall(callInstance);
+      } catch (error) {
+        console.error("Error joining call:", error);
+        toast.error("Could not join the call. Please try again.");
+      } finally {
+        setIsConnecting(false);
+      }
+    };
+
+    initCall();
+
+    // ✅ Fix 3: cleanup on unmount to prevent double initialization
+    return () => {
+      if (videoClient) videoClient.disconnectUser();
+    };
+  }, [tokenData, authUser, callId]);
+
+  if (isLoading || isConnecting) return <PageLoader />;
+
   return (
-    <div className="h-screen flex items-center justify-center bg-black text-white">
-      <div>
-        <h1 className="text-4xl">Call Page Works!</h1>
-        <p>Call ID from URL: {window.location.pathname}</p>
-      </div>
+    // ✅ Fix 4: full width/height layout so video is not constrained
+    <div className="h-screen w-full">
+      {client && call ? (
+        <StreamVideo client={client}>
+          <StreamCall call={call}>
+            <CallContent />
+          </StreamCall>
+        </StreamVideo>
+      ) : (
+        <div className="flex items-center justify-center h-full">
+          <p>Could not initialize call. Please refresh or try again later.</p>
+        </div>
+      )}
     </div>
   );
 };
 
-export default Call;
+const CallContent = () => {
+  const { useCallCallingState } = useCallStateHooks();
+  const callingState = useCallCallingState();
+  const navigate = useNavigate();
+
+  // ✅ Fix 5: navigate inside useEffect, not during render
+  useEffect(() => {
+    if (callingState === CallingState.LEFT) navigate("/");
+  }, [callingState, navigate]);
+
+  return (
+    <StreamTheme>
+      <SpeakerLayout />
+      <CallControls />
+    </StreamTheme>
+  );
+};
+
+export default CallPage;
