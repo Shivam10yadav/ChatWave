@@ -7,7 +7,10 @@ router.post('/signup',signup)
 router.post('/login',login)
 router.post('/logout',logout)
 router.post('/onboarding',protectRoute,onBoard)
-router.get('/me',protectRoute,(req,res)=>{
-    return res.status(200).json({success:true,user:req.user})
+router.get('/me', protectRoute, (req, res) => {
+    console.log("🔍 /me endpoint called");
+    console.log("Cookies:", req.cookies);
+    console.log("User:", req.user);
+    return res.status(200).json({success: true, user: req.user})
 })
 export default router;
